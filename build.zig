@@ -11,6 +11,7 @@ pub fn build(b: *std.Build) void {
 
     demo("xcb", b, b.path("demo/01-xcb.zig"), target, optimize);
     demo("hello", b, b.path("demo/02-hello.zig"), target, optimize);
+    demo("info", b, b.path("demo/03-info.zig"), target, optimize);
 
     const tests = b.addTest(.{ .root_module = mod });
     const run_tests = b.addRunArtifact(tests);
