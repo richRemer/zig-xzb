@@ -1,0 +1,14 @@
+.{
+    .name = .xzb,
+    .version = "0.0.0",
+    .fingerprint = 0xd3cf71f2c840ca01,
+    .minimum_zig_version = "0.15.2",
+    .dependencies = .{},
+    .paths = .{
+        "build.zig",
+        "build.zig.zon",
+        "src",
+        "LICENSE",
+        "README.md",
+    },
+}
