@@ -242,7 +242,7 @@ pub fn connection_has_error(conn: *connection_t) Result {
 pub fn create_window(
     conn: *connection_t,
     depth: u8,
-    wid: window_t,
+    window: window_t,
     parent: window_t,
     x: i16,
     y: i16,
@@ -257,7 +257,7 @@ pub fn create_window(
     return xcb.xcb_create_window(
         conn,
         depth,
-        wid,
+        window,
         parent,
         x,
         y,
@@ -269,6 +269,10 @@ pub fn create_window(
         value_mask,
         values,
     );
+}
+
+pub fn destroy_window(conn: *connection_t, window: window_t) void_cookie_t {
+    return xcb.xcb_destroy_window(conn, window);
 }
 
 pub fn disconnect(conn: *connection_t) void {

@@ -10,7 +10,7 @@ pub fn main() void {
         if (roots.data) |data| {
             const screen: *xcb.xcb_screen_t = @ptrCast(data);
 
-            const create_cookie = xcb.xcb_create_window(
+            _ = xcb.xcb_create_window(
                 conn,
                 screen.root_depth,
                 window,
@@ -25,14 +25,15 @@ pub fn main() void {
                 0,
                 null,
             );
-            _ = create_cookie;
 
-            const map_cookie = xcb.xcb_map_window(conn, window);
-            _ = map_cookie;
-
+            _ = xcb.xcb_map_window(conn, window);
             _ = xcb.xcb_flush(conn);
 
             std.Thread.sleep(5_000_000_000);
+
+            _ = xcb.xcb_destroy_window(conn, window);
+            _ = xcb.xcb_disconnect(conn);
+
             std.process.exit(0);
         }
     }

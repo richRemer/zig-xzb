@@ -32,6 +32,10 @@ pub fn main() void {
         _ = xzb.flush(conn);
 
         std.Thread.sleep(1_000_000_000 * 5);
+
+        _ = xzb.destroy_window(conn, window);
+        _ = xzb.disconnect(conn);
+
         std.process.exit(0);
     }
 }
