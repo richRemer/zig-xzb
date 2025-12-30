@@ -208,7 +208,59 @@ pub const EventCode = enum(u16) {
     ge_generic = 35,
 };
 
+pub const GCFunction = enum(c_int) {
+    clear = 0,
+    @"and" = 1,
+    and_reverse = 2,
+    copy = 3,
+    and_inverted = 4,
+    noop = 5,
+    xor = 6,
+    @"or" = 7,
+    nor = 8,
+    equiv = 9,
+    invert = 10,
+    or_reverse = 11,
+    copy_inverted = 12,
+    or_inverted = 13,
+    nand = 14,
+    set = 15,
+};
+
+pub const GCMask = packed struct(u32) {
+    function: bool = false,
+    plane_mask: bool = false,
+    foreground: bool = false,
+    background: bool = false,
+    line_width: bool = false,
+    line_style: bool = false,
+    cap_style: bool = false,
+    join_style: bool = false,
+    fill_style: bool = false,
+    fill_rule: bool = false,
+    tile: bool = false,
+    stipple: bool = false,
+    tile_stipple_origin_x: bool = false,
+    tile_stipple_origin_y: bool = false,
+    font: bool = false,
+    subwindow_mode: bool = false,
+    graphics_exposures: bool = false,
+    clip_origin_x: bool = false,
+    clip_origin_y: bool = false,
+    clip_mask: bool = false,
+    dash_offset: bool = false,
+    dash_list: bool = false,
+    arc_mode: bool = false,
+    reserved: u9 = 0,
+};
+
+// TODO: generate compile error if XCB types are not u32
+pub const id_t = u32;
+
 pub const connection_t = xcb.xcb_connection_t;
+pub const drawable_t = xcb.xcb_drawable_t;
+pub const gcontext_t = xcb.xcb_gcontext_t;
+pub const rectangle_t = xcb.xcb_rectangle_t;
 pub const screen_t = xcb.xcb_screen_t;
 pub const screen_iterator_t = xcb.xcb_screen_iterator_t;
 pub const setup_t = xcb.xcb_setup_t;
@@ -227,6 +279,15 @@ pub const button_press_event_t = xcb.xcb_button_press_event_t;
 pub const void_cookie_t = xcb.xcb_void_cookie_t;
 pub const intern_atom_cookie_t = xcb.xcb_intern_atom_cookie_t;
 
+pub fn change_gc(
+    conn: *connection_t,
+    gc: gcontext_t,
+    value_mask: GCMask,
+    values: ?*const anyopaque,
+) void_cookie_t {
+    return xcb.xcb_change_gc(conn, gc, value_mask, values);
+}
+
 pub fn connect(displayName: ?[:0]const u8, screen: ?*c_int) *connection_t {
     if (xcb.xcb_connect(@ptrCast(displayName), screen)) |c| {
         return c;
@@ -237,6 +298,22 @@ pub fn connect(displayName: ?[:0]const u8, screen: ?*c_int) *connection_t {
 
 pub fn connection_has_error(conn: *connection_t) Result {
     return @enumFromInt(xcb.xcb_connection_has_error(conn));
+}
+
+pub fn create_gc(
+    conn: *connection_t,
+    gc: gcontext_t,
+    drawable: drawable_t,
+    value_mask: GCMask,
+    values: ?*const anyopaque,
+) void_cookie_t {
+    return xcb.xcb_create_gc(
+        conn,
+        gc,
+        drawable,
+        @bitCast(value_mask),
+        values,
+    );
 }
 
 pub fn create_window(
@@ -283,7 +360,7 @@ pub fn flush(conn: *connection_t) Result {
     return @enumFromInt(xcb.xcb_flush(conn));
 }
 
-pub fn generate_id(conn: *connection_t) u32 {
+pub fn generate_id(conn: *connection_t) id_t {
     return xcb.xcb_generate_id(conn);
 }
 
@@ -291,8 +368,38 @@ pub fn get_setup(conn: *connection_t) *const setup_t {
     return xcb.xcb_get_setup(conn);
 }
 
-pub fn map_window(conn: *connection_t, id: u32) void_cookie_t {
-    return xcb.xcb_map_window(conn, id);
+pub fn map_window(conn: *connection_t, window: window_t) void_cookie_t {
+    return xcb.xcb_map_window(conn, window);
+}
+
+pub fn poly_fill_rectangle(
+    conn: *connection_t,
+    drawable: drawable_t,
+    gc: gcontext_t,
+    rectangles: []const rectangle_t,
+) void_cookie_t {
+    return xcb.xcb_poly_fill_rectangle(
+        conn,
+        drawable,
+        gc,
+        @intCast(rectangles.len),
+        @ptrCast(rectangles.ptr),
+    );
+}
+
+pub fn poly_rectangle(
+    conn: *connection_t,
+    drawable: drawable_t,
+    gc: gcontext_t,
+    rectangles: []rectangle_t,
+) void_cookie_t {
+    return xcb.xcb_poly_rectangle(
+        conn,
+        drawable,
+        gc,
+        rectangles.len,
+        rectangles.ptr,
+    );
 }
 
 pub fn screen_next(iter: *screen_iterator_t) void {
