@@ -227,7 +227,7 @@ pub const GCFunction = enum(c_int) {
     set = 15,
 };
 
-pub const GCMask = packed struct(u32) {
+pub const CreateGCMask = packed struct(u32) {
     function: bool = false,
     plane_mask: bool = false,
     foreground: bool = false,
@@ -252,6 +252,54 @@ pub const GCMask = packed struct(u32) {
     dash_list: bool = false,
     arc_mode: bool = false,
     reserved: u9 = 0,
+};
+
+pub const CreateWindowMask = packed struct(u32) {
+    back_pixmap: bool = false,
+    back_pixel: bool = false,
+    border_pixmap: bool = false,
+    border_pixel: bool = false,
+    bit_gravity: bool = false,
+    win_gravity: bool = false,
+    backing_store: bool = false,
+    backing_planes: bool = false,
+    backing_pixel: bool = false,
+    override_redirect: bool = false,
+    save_under: bool = false,
+    event_mask: bool = false,
+    dont_propagate: bool = false,
+    colormap: bool = false,
+    cursor: bool = false,
+    reserved: u17 = 0,
+};
+
+pub const EventMask = packed struct(u32) {
+    key_press: bool = false,
+    key_release: bool = false,
+    button_press: bool = false,
+    button_release: bool = false,
+    enter_window: bool = false,
+    leave_window: bool = false,
+    pointer_motion: bool = false,
+    pointer_motion_hint: bool = false,
+    button_1_motion: bool = false,
+    button_2_motion: bool = false,
+    button_3_motion: bool = false,
+    button_4_motion: bool = false,
+    button_5_motion: bool = false,
+    button_motion: bool = false,
+    keymap_state: bool = false,
+    exposure: bool = false,
+    visibility_change: bool = false,
+    structure_notify: bool = false,
+    resize_redirect: bool = false,
+    substructure_notify: bool = false,
+    substructure_redirect: bool = false,
+    focus_change: bool = false,
+    property_change: bool = false,
+    color_map_change: bool = false,
+    owner_grab_button: bool = false,
+    reserved: u7 = 0,
 };
 
 // TODO: generate compile error if XCB types are not u32
@@ -282,7 +330,7 @@ pub const intern_atom_cookie_t = xcb.xcb_intern_atom_cookie_t;
 pub fn change_gc(
     conn: *connection_t,
     gc: gcontext_t,
-    value_mask: GCMask,
+    value_mask: CreateGCMask,
     values: ?*const anyopaque,
 ) void_cookie_t {
     return xcb.xcb_change_gc(conn, gc, value_mask, values);
@@ -304,7 +352,7 @@ pub fn create_gc(
     conn: *connection_t,
     gc: gcontext_t,
     drawable: drawable_t,
-    value_mask: GCMask,
+    value_mask: CreateGCMask,
     values: ?*const anyopaque,
 ) void_cookie_t {
     return xcb.xcb_create_gc(
@@ -328,7 +376,7 @@ pub fn create_window(
     border: u16,
     class: u16,
     visual: visualid_t,
-    value_mask: u32,
+    value_mask: CreateWindowMask,
     values: ?*const anyopaque,
 ) void_cookie_t {
     return xcb.xcb_create_window(
@@ -343,7 +391,7 @@ pub fn create_window(
         border,
         class,
         visual,
-        value_mask,
+        @bitCast(value_mask),
         values,
     );
 }
@@ -358,6 +406,10 @@ pub fn disconnect(conn: *connection_t) void {
 
 pub fn flush(conn: *connection_t) Result {
     return @enumFromInt(xcb.xcb_flush(conn));
+}
+
+pub fn free_gc(conn: *connection_t, gc: gcontext_t) void_cookie_t {
+    return xcb.xcb_free_gc(conn, gc);
 }
 
 pub fn generate_id(conn: *connection_t) id_t {
@@ -408,4 +460,8 @@ pub fn screen_next(iter: *screen_iterator_t) void {
 
 pub fn setup_roots_iterator(setup: *const setup_t) screen_iterator_t {
     return xcb.xcb_setup_roots_iterator(setup);
+}
+
+pub fn wait_for_event(conn: *connection_t) ?*generic_event_t {
+    return xcb.xcb_wait_for_event(conn);
 }

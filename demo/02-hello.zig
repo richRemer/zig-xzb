@@ -1,54 +1,100 @@
 const std = @import("std");
 const xzb = @import("xzb");
+const slice = @import("lib/mem.zig").slice;
 
 const copy = xzb.xcb.XCB_COPY_FROM_PARENT;
+var rect: xzb.rectangle_t = .{ .x = 20, .y = 20, .width = 60, .height = 60 };
 
 pub fn main() void {
     const conn = xzb.connect(null, null);
     const setup = xzb.get_setup(conn);
     const roots = xzb.setup_roots_iterator(setup);
-    const window = xzb.generate_id(conn);
-    const gc = xzb.generate_id(conn);
-    const rects: []const xzb.rectangle_t = &.{
-        .{ .x = 10, .y = 10, .width = 80, .height = 80 },
-    };
+    const rects: []const xzb.rectangle_t = slice(xzb.rectangle_t, @ptrCast(&rect), 1);
 
     if (roots.data) |data| {
         const screen: *xzb.screen_t = @ptrCast(data);
-        const gcmask = xzb.GCMask{ .background = true, .foreground = true };
-        const gcvals: [2]u32 = .{ screen.white_pixel, screen.black_pixel };
-
-        _ = xzb.create_gc(conn, gc, screen.root, gcmask, &gcvals);
-
-        _ = xzb.create_window(
-            conn,
-            screen.root_depth,
-            window,
-            screen.root,
-            100,
-            100,
-            100,
-            100,
-            0,
-            copy,
-            copy,
-            0,
-            null,
-        );
+        const window = create_window(conn, screen);
+        const gc = create_gc(conn, screen);
 
         _ = xzb.map_window(conn, window);
         _ = xzb.flush(conn);
 
-        std.Thread.sleep(100_000_000 * 5);
+        loop: while (xzb.wait_for_event(conn)) |e| {
+            // TODO: use u7 field to explicit skip bit twiddling op
+            switch (e.response_type & ~@as(u8, 0x80)) {
+                xzb.xcb.XCB_EXPOSE => {
+                    std.debug.print("EXPOSE\n", .{});
+                    _ = xzb.poly_fill_rectangle(conn, window, gc, rects);
+                    _ = xzb.flush(conn);
+                },
+                xzb.xcb.XCB_KEY_PRESS => {
+                    const event: *xzb.key_press_event_t = @ptrCast(e);
+                    std.debug.print("KEY_PRESS {d}\n", .{event.detail});
+                    if (event.detail == 9) { // ESCAPE
+                        std.c.free(e);
+                        break :loop;
+                    }
+                },
+                else => {
+                    std.debug.print("??? {d}\n", .{e.response_type});
+                },
+            }
 
-        _ = xzb.poly_fill_rectangle(conn, window, gc, rects);
-        _ = xzb.flush(conn);
+            std.c.free(e);
+        }
 
-        std.Thread.sleep(1_000_000_000 * 5);
-
+        _ = xzb.free_gc(conn, gc);
         _ = xzb.destroy_window(conn, window);
         _ = xzb.disconnect(conn);
 
         std.process.exit(0);
     }
+}
+
+fn create_gc(
+    conn: *xzb.connection_t,
+    screen: *const xzb.screen_t,
+) xzb.gcontext_t {
+    const gc = xzb.generate_id(conn);
+    const values: [3]u32 = .{ screen.white_pixel, screen.black_pixel, 0 };
+    const mask = xzb.CreateGCMask{
+        .background = true,
+        .foreground = true,
+        .graphics_exposures = true,
+    };
+
+    _ = xzb.create_gc(conn, gc, screen.root, mask, &values);
+
+    return gc;
+}
+
+fn create_window(
+    conn: *xzb.connection_t,
+    screen: *xzb.screen_t,
+) xzb.window_t {
+    const window = xzb.generate_id(conn);
+    const events: xzb.EventMask = .{ .exposure = true, .key_press = true };
+    const values: [2]u32 = .{ screen.black_pixel, @bitCast(events) };
+    const mask = xzb.CreateWindowMask{
+        .back_pixel = true,
+        .event_mask = true,
+    };
+
+    _ = xzb.create_window(
+        conn,
+        screen.root_depth,
+        window,
+        screen.root,
+        100,
+        100,
+        100,
+        100,
+        0,
+        copy,
+        copy,
+        mask,
+        &values,
+    );
+
+    return window;
 }
