@@ -21,6 +21,7 @@ pub fn main() void {
 
         loop: while (xzb.wait_for_event(conn)) |e| {
             // TODO: use u7 field to explicit skip bit twiddling op
+            // TODO: MSB indicates SendEvent from another X client
             switch (e.response_type & ~@as(u8, 0x80)) {
                 xzb.xcb.XCB_EXPOSE => {
                     std.debug.print("EXPOSE\n", .{});

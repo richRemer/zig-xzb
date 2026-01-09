@@ -23,6 +23,7 @@ pub fn main() void {
                 const evt: *xcb.xcb_generic_event_t = @ptrCast(e);
 
                 // TODO: use u7 field to explicit skip bit twiddling op
+                // TODO: MSB indicates SendEvent from another X client
                 switch (evt.response_type & ~@as(u8, 0x80)) {
                     xcb.XCB_EXPOSE => {
                         std.debug.print("EXPOSE\n", .{});
