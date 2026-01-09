@@ -172,26 +172,47 @@ pub const OpCode = enum(u8) {
 };
 
 pub const EventCode = enum(u8) {
+    /// Error from server.
     @"error" = 0, // not strictly an X11 "Event"
+    /// Reply to client request.
     reply = 1, // not strictly an X11 "Event"
+    /// Event sent when keyboard button is pressed.
     key_press = 2,
+    /// Event sent when keyboard button is released.
     key_release = 3,
+    /// Event sent when pointer button is pressed.
     button_press = 4,
+    /// Event sent when pointer button is released.
     button_release = 5,
+    /// Event sent when pointer moves.
     motion_notify = 6,
+    /// Event sent when pointer enters window.
     enter_notify = 7,
+    /// Event sent when pointer leaves window.
     leave_notify = 8,
+    /// Event sent when input focus enters window.
     focus_in = 9,
+    /// Event sent when input focus leaves window.
     focus_out = 10,
+    /// Event sent when keymap has changed upon focus.
     keymap_notify = 11,
+    /// Event sent when window contents have been invalidated.
     expose = 12,
+    /// Event sent when graphics context regions have been invalidated.
     graphics_exposure = 13,
+    /// Event sent when graphics context regions could have been invalidated.
     no_exposure = 14,
+    /// Event sent when window visibility has changed.
     visibility_notify = 15,
+    /// Event sent when window has been created.
     create_notify = 16,
+    /// Event sent when window has been destroyed.
     destroy_notify = 17,
+    /// Event sent when window is unmapped.
     unmap_notify = 18,
+    /// Event sent when window is mapped.
     map_notify = 19,
+    /// Event sent on request to unmap window without override-redirect.
     map_request = 20,
     reparent_notify = 21,
     configure_notify = 22,
