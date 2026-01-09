@@ -171,7 +171,9 @@ pub const OpCode = enum(u8) {
     no_operation = 127,
 };
 
-pub const EventCode = enum(u16) {
+pub const EventCode = enum(u8) {
+    @"error" = 0, // not strictly an X11 "Event"
+    reply = 1, // not strictly an X11 "Event"
     key_press = 2,
     key_release = 3,
     button_press = 4,
@@ -305,13 +307,16 @@ pub const EventMask = packed struct(u32) {
 // TODO: generate compile error if XCB types are not u32
 pub const id_t = u32;
 
+pub const button_t = xcb.xcb_button_t;
 pub const connection_t = xcb.xcb_connection_t;
 pub const drawable_t = xcb.xcb_drawable_t;
 pub const gcontext_t = xcb.xcb_gcontext_t;
+pub const keycode_t = xcb.xcb_keycode_t;
 pub const rectangle_t = xcb.xcb_rectangle_t;
 pub const screen_t = xcb.xcb_screen_t;
 pub const screen_iterator_t = xcb.xcb_screen_iterator_t;
 pub const setup_t = xcb.xcb_setup_t;
+pub const timestamp_t = xcb.xcb_timestamp_t;
 pub const visualid_t = xcb.xcb_visualid_t;
 pub const window_t = xcb.xcb_window_t;
 
@@ -323,6 +328,7 @@ pub const generic_event_t = xcb.xcb_generic_event_t;
 pub const key_press_event_t = xcb.xcb_key_press_event_t;
 pub const key_release_event_t = xcb.xcb_key_release_event_t;
 pub const button_press_event_t = xcb.xcb_button_press_event_t;
+pub const button_release_event_t = xcb.xcb_button_release_event_t;
 
 pub const void_cookie_t = xcb.xcb_void_cookie_t;
 pub const intern_atom_cookie_t = xcb.xcb_intern_atom_cookie_t;
