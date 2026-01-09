@@ -1,6 +1,6 @@
 .{
     .name = .xzb,
-    .version = "0.0.1",
+    .version = "0.0.2",
     .fingerprint = 0xd3cf71f2c840ca01,
     .minimum_zig_version = "0.15.2",
     .dependencies = .{},

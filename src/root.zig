@@ -432,7 +432,8 @@ pub fn disconnect(conn: *connection_t) void {
 }
 
 pub fn flush(conn: *connection_t) Result {
-    return @enumFromInt(xcb.xcb_flush(conn));
+    const result = xcb.xcb_flush(conn);
+    return if (result > 0) .ok else @enumFromInt(result);
 }
 
 pub fn free_gc(conn: *connection_t, gc: gcontext_t) void_cookie_t {
