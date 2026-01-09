@@ -3,13 +3,11 @@ const xzb = @import("xzb");
 const slice = @import("lib/mem.zig").slice;
 
 const copy = xzb.xcb.XCB_COPY_FROM_PARENT;
-var rect: xzb.rectangle_t = .{ .x = 20, .y = 20, .width = 60, .height = 60 };
 
 pub fn main() void {
     const conn = xzb.connect(null, null);
     const setup = xzb.get_setup(conn);
     const roots = xzb.setup_roots_iterator(setup);
-    const rects: []const xzb.rectangle_t = slice(xzb.rectangle_t, @ptrCast(&rect), 1);
 
     if (roots.data) |data| {
         const screen: *xzb.screen_t = @ptrCast(data);
@@ -24,13 +22,11 @@ pub fn main() void {
             // TODO: MSB indicates SendEvent from another X client
             switch (e.response_type & ~@as(u8, 0x80)) {
                 xzb.xcb.XCB_EXPOSE => {
-                    std.debug.print("EXPOSE\n", .{});
-                    _ = xzb.poly_fill_rectangle(conn, window, gc, rects);
+                    _ = xzb.image_text_8(conn, window, gc, 5, 50, "zigga what?");
                     _ = xzb.flush(conn);
                 },
                 xzb.xcb.XCB_KEY_PRESS => {
                     const event: *xzb.key_press_event_t = @ptrCast(e);
-                    std.debug.print("KEY_PRESS {d}\n", .{event.detail});
                     if (event.detail == 9) { // ESCAPE
                         std.c.free(e);
                         break :loop;

@@ -453,6 +453,25 @@ pub fn get_setup(conn: *connection_t) *const setup_t {
     return xcb.xcb_get_setup(conn);
 }
 
+pub fn image_text_8(
+    conn: *connection_t,
+    drawable: drawable_t,
+    gc: gcontext_t,
+    x: i16,
+    y: i16,
+    string: []const u8,
+) void_cookie_t {
+    return xcb.xcb_image_text_8(
+        conn,
+        @intCast(string.len),
+        drawable,
+        gc,
+        x,
+        y,
+        @ptrCast(string.ptr),
+    );
+}
+
 pub fn map_window(conn: *connection_t, window: window_t) void_cookie_t {
     return xcb.xcb_map_window(conn, window);
 }
