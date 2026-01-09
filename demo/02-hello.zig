@@ -57,14 +57,27 @@ fn create_gc(
     screen: *const xzb.screen_t,
 ) xzb.gcontext_t {
     const gc = xzb.generate_id(conn);
-    const values: [3]u32 = .{ screen.white_pixel, screen.black_pixel, 0 };
+    const font = xzb.generate_id(conn);
+
+    // SHOULD keep these in CreateGCMask order
     const mask = xzb.CreateGCMask{
         .background = true,
         .foreground = true,
+        .font = true,
         .graphics_exposures = true,
     };
 
+    // MUST keep these in CreateGCMask order
+    const values: [4]u32 = .{
+        screen.white_pixel,
+        screen.black_pixel,
+        font,
+        0,
+    };
+
+    _ = xzb.open_font(conn, font, "*nimbus sans*regular*r-normal*8859-1");
     _ = xzb.create_gc(conn, gc, screen.root, mask, &values);
+    _ = xzb.close_font(conn, font);
 
     return gc;
 }

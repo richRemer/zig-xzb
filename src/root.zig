@@ -331,6 +331,7 @@ pub const id_t = u32;
 pub const button_t = xcb.xcb_button_t;
 pub const connection_t = xcb.xcb_connection_t;
 pub const drawable_t = xcb.xcb_drawable_t;
+pub const font_t = xcb.xcb_font_t;
 pub const gcontext_t = xcb.xcb_gcontext_t;
 pub const keycode_t = xcb.xcb_keycode_t;
 pub const rectangle_t = xcb.xcb_rectangle_t;
@@ -361,6 +362,10 @@ pub fn change_gc(
     values: ?*const anyopaque,
 ) void_cookie_t {
     return xcb.xcb_change_gc(conn, gc, value_mask, values);
+}
+
+pub fn close_font(conn: *connection_t, font: font_t) void_cookie_t {
+    return xcb.xcb_close_font(conn, font);
 }
 
 pub fn connect(displayName: ?[:0]const u8, screen: ?*c_int) *connection_t {
@@ -450,6 +455,19 @@ pub fn get_setup(conn: *connection_t) *const setup_t {
 
 pub fn map_window(conn: *connection_t, window: window_t) void_cookie_t {
     return xcb.xcb_map_window(conn, window);
+}
+
+pub fn open_font(
+    conn: *connection_t,
+    font: font_t,
+    name: []const u8,
+) void_cookie_t {
+    return xcb.xcb_open_font(
+        conn,
+        font,
+        @intCast(name.len),
+        @ptrCast(name.ptr),
+    );
 }
 
 pub fn poly_fill_rectangle(
