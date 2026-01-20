@@ -527,6 +527,10 @@ pub fn setup_roots_iterator(setup: *const setup_t) screen_iterator_t {
     return xcb.xcb_setup_roots_iterator(setup);
 }
 
+pub fn unmap_window(conn: *connection_t, window: window_t) void_cookie_t {
+    return xcb.xcb_unmap_window(conn, window);
+}
+
 pub fn wait_for_event(conn: *connection_t) ?*generic_event_t {
     return xcb.xcb_wait_for_event(conn);
 }
