@@ -250,6 +250,78 @@ pub const GCFunction = enum(c_int) {
     set = 15,
 };
 
+pub const Atom = enum(c_int) {
+    NONE = 0,
+    PRIMARY = 1,
+    SECONDARY = 2,
+    ARC = 3,
+    ATOM = 4,
+    BITMAP = 5,
+    CARDINAL = 6,
+    COLORMAP = 7,
+    CURSOR = 8,
+    CUT_BUFFER0 = 9,
+    CUT_BUFFER1 = 10,
+    CUT_BUFFER2 = 11,
+    CUT_BUFFER3 = 12,
+    CUT_BUFFER4 = 13,
+    CUT_BUFFER5 = 14,
+    CUT_BUFFER6 = 15,
+    CUT_BUFFER7 = 16,
+    DRAWABLE = 17,
+    FONT = 18,
+    INTEGER = 19,
+    PIXMAP = 20,
+    POINT = 21,
+    RECTANGLE = 22,
+    RESOURCE_MANAGER = 23,
+    RGB_COLOR_MAP = 24,
+    RGB_BEST_MAP = 25,
+    RGB_BLUE_MAP = 26,
+    RGB_DEFAULT_MAP = 27,
+    RGB_GRAY_MAP = 28,
+    RGB_GREEN_MAP = 29,
+    RGB_RED_MAP = 30,
+    STRING = 31,
+    VISUALID = 32,
+    WINDOW = 33,
+    WM_COMMAND = 34,
+    WM_HINTS = 35,
+    WM_CLIENT_MACHINE = 36,
+    WM_ICON_NAME = 37,
+    WM_ICON_SIZE = 38,
+    WM_NAME = 39,
+    WM_NORMAL_HINTS = 40,
+    WM_SIZE_HINTS = 41,
+    WM_ZOOM_HINTS = 42,
+    MIN_SPACE = 43,
+    NORM_SPACE = 44,
+    MAX_SPACE = 45,
+    END_SPACE = 46,
+    SUPERSCRIPT_X = 47,
+    SUPERSCRIPT_Y = 48,
+    SUBSCRIPT_X = 49,
+    SUBSCRIPT_Y = 50,
+    UNDERLINE_POSITION = 51,
+    UNDERLINE_THICKNESS = 52,
+    STRIKEOUT_ASCENT = 53,
+    STRIKEOUT_DESCENT = 54,
+    ITALIC_ANGLE = 55,
+    X_HEIGHT = 56,
+    QUAD_WIDTH = 57,
+    WEIGHT = 58,
+    POINT_SIZE = 59,
+    RESOLUTION = 60,
+    COPYRIGHT = 61,
+    NOTICE = 62,
+    FONT_NAME = 63,
+    FAMILY_NAME = 64,
+    FULL_NAME = 65,
+    CAP_HEIGHT = 66,
+    WM_CLASS = 67,
+    WM_TRANSIENT_FOR = 68,
+};
+
 pub const CreateGCMask = packed struct(u32) {
     function: bool = false,
     plane_mask: bool = false,
@@ -325,9 +397,16 @@ pub const EventMask = packed struct(u32) {
     reserved: u7 = 0,
 };
 
+pub const PropMode = enum(u8) {
+    replace = 0,
+    prepend = 1,
+    append = 2,
+};
+
 // TODO: generate compile error if XCB types are not u32
 pub const id_t = u32;
 
+pub const atom_t = xcb.xcb_atom_t;
 pub const button_t = xcb.xcb_button_t;
 pub const connection_t = xcb.xcb_connection_t;
 pub const drawable_t = xcb.xcb_drawable_t;
@@ -362,6 +441,27 @@ pub fn change_gc(
     values: ?*const anyopaque,
 ) void_cookie_t {
     return xcb.xcb_change_gc(conn, gc, value_mask, values);
+}
+
+pub fn change_property(
+    conn: *connection_t,
+    mode: PropMode,
+    window: window_t,
+    property: atom_t,
+    typ: atom_t,
+    comptime T: type,
+    data: []const T,
+) void_cookie_t {
+    return xcb.xcb_change_property(
+        conn,
+        @intFromEnum(mode),
+        window,
+        property,
+        typ,
+        @typeInfo(T).int.bits,
+        @intCast(data.len),
+        data.ptr,
+    );
 }
 
 pub fn close_font(conn: *connection_t, font: font_t) void_cookie_t {

@@ -106,5 +106,15 @@ fn create_window(
         &values,
     );
 
+    _ = xzb.change_property(
+        conn,
+        .replace,
+        window,
+        @intFromEnum(xzb.Atom.WM_NAME),
+        @intFromEnum(xzb.Atom.STRING),
+        u8,
+        "hello?",
+    );
+
     return window;
 }

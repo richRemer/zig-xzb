@@ -100,5 +100,16 @@ fn create_window(
         &values,
     );
 
+    _ = xcb.xcb_change_property(
+        conn,
+        xcb.XCB_PROP_MODE_REPLACE,
+        window,
+        xcb.XCB_ATOM_WM_NAME,
+        xcb.XCB_ATOM_STRING,
+        8,
+        "hello?".len,
+        "hello?",
+    );
+
     return window;
 }
