@@ -1,6 +1,5 @@
 const std = @import("std");
 const xcb = @cImport(@cInclude("xcb/xcb.h"));
-const slice = @import("lib/mem.zig").slice;
 const rectangle = xcb.xcb_rectangle_t;
 
 var rect: rectangle = .{ .x = 20, .y = 20, .width = 60, .height = 60 };
@@ -9,7 +8,7 @@ pub fn main() void {
     if (xcb.xcb_connect(null, null)) |conn| {
         const setup = xcb.xcb_get_setup(conn);
         const roots = xcb.xcb_setup_roots_iterator(setup);
-        const rects: []const rectangle = slice(rectangle, @ptrCast(&rect), 1);
+        const rects: []const rectangle = @as(*[1]rectangle, @ptrCast(&rect));
 
         if (roots.data) |data| {
             const screen: *xcb.xcb_screen_t = @ptrCast(data);

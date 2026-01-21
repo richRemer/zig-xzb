@@ -1,7 +1,5 @@
 const std = @import("std");
 const xzb = @import("xzb");
-const slice = @import("lib/mem.zig").slice;
-
 const copy = xzb.xcb.XCB_COPY_FROM_PARENT;
 
 pub fn main() void {
@@ -110,8 +108,8 @@ fn create_window(
         conn,
         .replace,
         window,
-        @intFromEnum(xzb.Atom.WM_NAME),
-        @intFromEnum(xzb.Atom.STRING),
+        xzb.xatom.property.wm_name,
+        xzb.xatom.type.string,
         u8,
         "hello?",
     );
