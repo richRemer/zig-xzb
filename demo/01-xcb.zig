@@ -12,37 +12,37 @@ pub fn main() void {
 
         if (roots.data) |data| {
             const screen: *xcb.xcb_screen_t = @ptrCast(data);
-            const window = create_window(conn, screen);
+            const atoms = AppAtoms.init(conn);
+            const window = create_window(conn, screen, &atoms);
             const gc = create_gc(conn, screen);
 
             _ = xcb.xcb_map_window(conn, window);
             _ = xcb.xcb_flush(conn);
 
             loop: while (xcb.xcb_wait_for_event(conn)) |e| {
+                defer std.c.free(e);
                 const evt: *xcb.xcb_generic_event_t = @ptrCast(e);
 
                 // TODO: use u7 field to explicit skip bit twiddling op
                 // TODO: MSB indicates SendEvent from another X client
                 switch (evt.response_type & ~@as(u8, 0x80)) {
                     xcb.XCB_EXPOSE => {
-                        std.debug.print("EXPOSE\n", .{});
                         _ = xcb.xcb_poly_fill_rectangle(conn, window, gc, 1, rects.ptr);
                         _ = xcb.xcb_flush(conn);
                     },
                     xcb.XCB_KEY_PRESS => {
                         const event: *xcb.xcb_key_press_event_t = @ptrCast(evt);
-                        std.debug.print("KEY_PRESS {d}\n", .{event.detail});
-                        if (event.detail == 9) { // ESCAPE
-                            std.c.free(e);
-                            break :loop;
-                        }
+                        if (event.state == 4 and event.detail == 25) break :loop;
+                    },
+                    xcb.XCB_CLIENT_MESSAGE => {
+                        const event: *xcb.xcb_client_message_event_t = @ptrCast(evt);
+                        const atom = event.data.data32[0];
+                        if (atom == atoms.WM_DELETE_WINDOW) break :loop;
                     },
                     else => {
                         std.debug.print("??? {d}\n", .{evt.response_type});
                     },
                 }
-
-                std.c.free(e);
             }
 
             _ = xcb.xcb_free_gc(conn, gc);
@@ -73,6 +73,7 @@ fn create_gc(
 fn create_window(
     conn: *xcb.xcb_connection_t,
     screen: *xcb.xcb_screen_t,
+    atoms: *const AppAtoms,
 ) xcb.xcb_window_t {
     const window = xcb.xcb_generate_id(conn);
     const emask: u32 =
@@ -110,5 +111,49 @@ fn create_window(
         "hello?",
     );
 
+    _ = xcb.xcb_change_property(
+        conn,
+        xcb.XCB_PROP_MODE_REPLACE,
+        window,
+        atoms.WM_PROTOCOLS,
+        xcb.XCB_ATOM_ATOM,
+        32,
+        1,
+        &atoms.WM_DELETE_WINDOW,
+    );
+
     return window;
 }
+
+const AppAtoms = struct {
+    WM_DELETE_WINDOW: xcb.xcb_atom_t,
+    WM_PROTOCOLS: xcb.xcb_atom_t,
+
+    pub fn init(conn: *xcb.xcb_connection_t) AppAtoms {
+        const field_names = comptime std.meta.fieldNames(AppAtoms);
+        const len = field_names.len;
+
+        var cookies: [len]xcb.xcb_intern_atom_cookie_t = undefined;
+        var atoms: AppAtoms = undefined;
+
+        inline for (field_names, 0..) |name, i| {
+            cookies[i] = xcb.xcb_intern_atom(
+                conn,
+                1,
+                @intCast(name.len),
+                @ptrCast(name.ptr),
+            );
+        }
+
+        inline for (field_names, 0..) |name, i| {
+            if (xcb.xcb_intern_atom_reply(conn, cookies[i], null)) |reply| {
+                @field(atoms, name) = reply.*.atom;
+                std.c.free(reply);
+            } else {
+                @field(atoms, name) = 0;
+            }
+        }
+
+        return atoms;
+    }
+};

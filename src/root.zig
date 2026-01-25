@@ -371,6 +371,7 @@ pub const key_press_event_t = xcb.xcb_key_press_event_t;
 pub const key_release_event_t = xcb.xcb_key_release_event_t;
 pub const button_press_event_t = xcb.xcb_button_press_event_t;
 pub const button_release_event_t = xcb.xcb_button_release_event_t;
+pub const client_message_event_t = xcb.xcb_client_message_event_t;
 
 pub const void_cookie_t = xcb.xcb_void_cookie_t;
 pub const intern_atom_cookie_t = xcb.xcb_intern_atom_cookie_t;

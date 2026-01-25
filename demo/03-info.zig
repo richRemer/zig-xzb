@@ -66,6 +66,7 @@ fn Intern(T: type) type {
 }
 
 const AppAtoms = struct {
+    WM_DELETE_WINDOW: xzb.atom_t,
     WM_PROTOCOLS: xzb.atom_t,
     WM_STATE: xzb.atom_t,
 
