@@ -4,9 +4,21 @@ const std = @import("std");
 pub const xcb = @cImport(@cInclude("xcb/xcb.h"));
 pub const xatom = @import("xatom.zig");
 
-pub const Result = enum(c_int) {
+pub const OkError = enum(c_int) {
     ok = 0,
     _,
+};
+
+pub const Result = enum(c_int) {
+    _,
+
+    pub fn ok(this: Result) bool {
+        return @as(c_int, @intFromEnum(this)) > 0;
+    }
+
+    pub fn failure(this: Result) bool {
+        return @as(c_int, @intFromEnum(this)) <= 0;
+    }
 };
 
 pub const ErrorCode = enum(u8) {
@@ -363,6 +375,8 @@ pub const button_release_event_t = xcb.xcb_button_release_event_t;
 pub const void_cookie_t = xcb.xcb_void_cookie_t;
 pub const intern_atom_cookie_t = xcb.xcb_intern_atom_cookie_t;
 
+pub const intern_atom_reply_t = xcb.xcb_intern_atom_reply_t;
+
 pub fn change_gc(
     conn: *connection_t,
     gc: gcontext_t,
@@ -405,7 +419,7 @@ pub fn connect(displayName: ?[:0]const u8, screen: ?*c_int) *connection_t {
     }
 }
 
-pub fn connection_has_error(conn: *connection_t) Result {
+pub fn connection_has_error(conn: *connection_t) OkError {
     return @enumFromInt(xcb.xcb_connection_has_error(conn));
 }
 
@@ -466,8 +480,7 @@ pub fn disconnect(conn: *connection_t) void {
 }
 
 pub fn flush(conn: *connection_t) Result {
-    const result = xcb.xcb_flush(conn);
-    return if (result > 0) .ok else @enumFromInt(result);
+    return @enumFromInt(xcb.xcb_flush(conn));
 }
 
 pub fn free_gc(conn: *connection_t, gc: gcontext_t) void_cookie_t {
@@ -499,6 +512,26 @@ pub fn image_text_8(
         y,
         @ptrCast(string.ptr),
     );
+}
+
+pub fn intern_atom(
+    conn: *connection_t,
+    exists: bool,
+    name: []const u8,
+) intern_atom_cookie_t {
+    return xcb.xcb_intern_atom(
+        conn,
+        @intFromBool(exists),
+        @intCast(name.len),
+        @ptrCast(name.ptr),
+    );
+}
+
+pub fn intern_atom_reply(
+    conn: *connection_t,
+    cookie: intern_atom_cookie_t,
+) ?*intern_atom_reply_t {
+    return xcb.xcb_intern_atom_reply(conn, cookie, null);
 }
 
 pub fn map_window(conn: *connection_t, window: window_t) void_cookie_t {

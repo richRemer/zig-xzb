@@ -26,4 +26,50 @@ pub fn main() void {
 
         xzb.screen_next(&roots);
     }
+
+    const atoms = AppAtoms.init(conn, true);
+
+    std.debug.print("\n", .{});
+    std.debug.print("{}\n", .{atoms});
 }
+
+fn Intern(T: type) type {
+    const field_names = std.meta.fieldNames(T);
+    const len = field_names.len;
+
+    return struct {
+        conn: *xzb.connection_t,
+        cookies: [len]xzb.intern_atom_cookie_t,
+
+        pub fn begin(conn: *xzb.connection_t, exists: bool) @This() {
+            var this: @This() = .{ .conn = conn, .cookies = undefined };
+
+            inline for (field_names, 0..) |field_name, i| {
+                this.cookies[i] = xzb.intern_atom(conn, exists, field_name);
+            }
+
+            return this;
+        }
+
+        pub fn finalize(this: @This()) T {
+            var atoms: T = undefined;
+
+            inline for (field_names, 0..) |field_name, i| {
+                const cookie = this.cookies[i];
+                const reply = xzb.intern_atom_reply(this.conn, cookie);
+                @field(atoms, field_name) = if (reply) |r| r.atom else 0;
+            }
+
+            return atoms;
+        }
+    };
+}
+
+const AppAtoms = struct {
+    WM_PROTOCOLS: xzb.atom_t,
+    WM_STATE: xzb.atom_t,
+
+    pub fn init(conn: *xzb.connection_t, exists: bool) AppAtoms {
+        return Intern(AppAtoms).begin(conn, exists).finalize();
+    }
+};
