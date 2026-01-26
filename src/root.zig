@@ -227,8 +227,11 @@ pub const EventCode = enum(u8) {
     map_notify = 19,
     /// Event sent on request to unmap window without override-redirect.
     map_request = 20,
+    /// Event sent when window parent has changed.
     reparent_notify = 21,
+    /// Event sent when window state has changed.
     configure_notify = 22,
+    /// Event sent when window attempts to change state of another.
     configure_request = 23,
     gravity_notify = 24,
     resize_request = 25,
@@ -239,6 +242,7 @@ pub const EventCode = enum(u8) {
     selection_request = 30,
     selection_notify = 31,
     colormap_notify = 32,
+    /// Event sent by another client.
     client_message = 33,
     mapping_notify = 34,
     ge_generic = 35,
@@ -342,6 +346,14 @@ pub const PropMode = enum(u8) {
     replace = 0,
     prepend = 1,
     append = 2,
+};
+
+pub const StackMode = enum(u8) {
+    above = 0,
+    below = 1,
+    top_if = 2,
+    bottom_if = 3,
+    opposite = 4,
 };
 
 // TODO: generate compile error if XCB types are not u32
