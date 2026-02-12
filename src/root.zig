@@ -386,8 +386,10 @@ pub const button_release_event_t = xcb.xcb_button_release_event_t;
 pub const client_message_event_t = xcb.xcb_client_message_event_t;
 
 pub const void_cookie_t = xcb.xcb_void_cookie_t;
+pub const get_property_cookie_t = xcb.xcb_get_property_cookie_t;
 pub const intern_atom_cookie_t = xcb.xcb_intern_atom_cookie_t;
 
+pub const get_property_reply_t = xcb.xcb_get_property_reply_t;
 pub const intern_atom_reply_t = xcb.xcb_intern_atom_reply_t;
 
 pub fn change_gc(
@@ -504,6 +506,33 @@ pub fn generate_id(conn: *connection_t) id_t {
     return xcb.xcb_generate_id(conn);
 }
 
+pub fn get_property(
+    conn: *connection_t,
+    window: window_t,
+    property: atom_t,
+    typ: atom_t,
+    offset: u32,
+    length: u32,
+) get_property_cookie_t {
+    // TODO: expose delete argument
+    return xcb.xcb_get_property(conn, 0, window, property, typ, offset, length);
+}
+
+pub fn get_property_reply(
+    conn: *connection_t,
+    cookie: get_property_cookie_t,
+) ?*get_property_reply_t {
+    return xcb.xcb_get_property_reply(conn, cookie, null);
+}
+
+pub fn get_property_value(reply: *const get_property_reply_t) ?*anyopaque {
+    return xcb.xcb_get_property_value(reply);
+}
+
+pub fn get_property_value_length(reply: *const get_property_reply_t) void {
+    xcb.xcb_get_property_value_length(reply);
+}
+
 pub fn get_setup(conn: *connection_t) *const setup_t {
     return xcb.xcb_get_setup(conn);
 }
@@ -562,6 +591,14 @@ pub fn open_font(
         @intCast(name.len),
         @ptrCast(name.ptr),
     );
+}
+
+pub fn poll_for_event(conn: *connection_t) ?*generic_event_t {
+    return xcb.xcb_poll_for_event(conn);
+}
+
+pub fn poll_for_queued_event(conn: *connection_t) ?*generic_event_t {
+    return xcb.xcb_poll_for_queued_event(conn);
 }
 
 pub fn poly_fill_rectangle(
